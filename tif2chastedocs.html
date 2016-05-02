@@ -1,0 +1,104 @@
+<html>
+
+	<head>
+		<title="tif2chaste docs">
+		<link rel="stylesheet" type="text/css" href="tif2chastedocs.css">
+	</head>
+
+
+	<body>
+		<div class="content">
+ 			<h1><code>tif2chaste</code> documentation</h1>
+			<h2>Installation</h2>
+			<p>
+				<code>tif2chaste</code> itself does not have any special installation process. Simply place <code>tif2chaste.py</code> and <code>tif2chastelib.py</code> in a folder of your choosing.
+				<code>tif2chaste</code> does, however, require the following python packages to have been installed on your computer:
+			</p>
+			<ul>
+				<li><code><a href="http://docs.scipy.org/doc/numpy-1.10.1/user/install.html">numpy</a></code></li>
+				<li><code><a href="http://opencv-python-tutroals.readthedocs.org/en/latest/py_tutorials/py_setup/py_table_of_contents_setup/py_table_of_contents_setup.html">cv2</a></code></li>
+				<li><code><a href="http://matplotlib.org/">matplotlib</a></code></li>
+			</ul>
+		
+			<h1>Usage</h1>
+			<p><code>tif2chaste</code> can convert a presegmented tiff file (for example, one produced with Seedwater Segmenter) into the appropriate Chaste simulation input files for the following four models:</p>
+			<ul>
+				<li>Vertex based cell models (<code>-mode vertex</code>)</li>
+				<li>Immersed Boundary cell models (<code>-mode immersed</code>)</li>
+				<li>Potts models (<code>-mode potts</code>)</li>
+				<li>Overlapping Spheres models (<code>-mode spheres</code>)</li>
+			</ul>
+			<p>The <code>-mode</code> option allows you to specify which of these output files you would like to create.
+			For example, this command:</p>
+			<div class="codebox">
+				<code>python tif2chaste.py -mode vertex -tif test.tif -node test.node -cell test.cell</code>
+			</div>
+			<p>will take a presegmented tif file called <code>test.tif</code> and produce two output files,
+			<code>test.node</code> and <code>test.cell</code>. These output files can then be used as input to a vertex based Chaste simulation.</p>
+		
+			<p>Likewise, the following commands:</p>
+			<div class="codebox">
+				<p><code>python tif2chaste.py -mode immersed -tif test.tif -node test.node -cell test.cell</code></p>
+				<p><code>python tif2chaste.py -mode potts -tif test.tif -node test.node -cell test.cell</code></p>
+				<p><code>python tif2chaste.py -mode spheres -tif test.tif -node test.node</code></p>
+			</div>
+			<p>will output files for Immersed Boundary, Potts, and Overlapping Spheres Chaste simulations, respectively. Notice that the Overlapping Spheres outputs only a nodes file (the centroids of the cells).</p>
+		
+			<h2>An example</h2>
+			<h3>Immersed Boundary</h3>
+			<p>Starting from the following (unsegmented) image file:</p>
+			<img src="four_hex_unsegmented.png" width=30%>
+			<p>one can segment it using a tool such as <a href="https://code.google.com/p/seedwater/">SeedWater Segmenter</a> to produce a segmented tif image file, <a href="four_hex_segmented.tif">four_hex_segmented.tif</a>:</p>
+			<img src="four_hex_segmented.png" width=30%>
+			<p>which can be converted to immersed boundary Chaste files using the following command:</p>
+			<div class="codebox">
+				<code>python tif2chaste.py -mode immersed -tif four_hex_segmented.tif -node four_hex.node -cell four_hex.cell</code>
+			</div>
+			<p>The following image shows a visualisation of the resultant test.node and test.cell files, with the pixels being node positions, and the colour indicating which cell each belongs to:</p>
+			<img src="four_hex_margin_5.png" width=30%>
+			<p>Notice that <code>tif2chaste</code> has automatically culled those cells which lie on the boundary of the image, leaving behind only 4. A cell is determined to be on the boundary if
+			any of its contour pixels lie within a certain <code>margin</code> from the sides of the image. By default this is 5 pixels. However, you may wish to use a different margin. For example,
+			if you don't want any culling at all, set the margin to zero:</p>
+			<div class="codebox">
+				<code>python tif2chaste.py -mode immersed -tif four_hex_segmented.tif -node four_hex.node -cell four_hex.cell -margin 0</code>
+			</div>
+			<p>Which would result in the following cells being included in the test.node and test.cell file:</p>
+			<img src="four_hex_margin_0.png" width=30%>
+			<p>i.e. all of the cells visible in the original image.</i>
+			<p>For immersed boundary simulations, we may also wish to have a larger fluid gap between the cells. <code>tif2chaste</code> allows this by means of the <code>-scale</code> command. This rescales each cell's contour about its centroid. A scaling factor of <code>0.8</code>, for example, would correspond to the cell being scaled down to 80% of its original size. By default, this parameter is set to <code>1.0</code> (no scaling). The following command:</p>
+			<div class="codebox">
+				<code>python tif2chaste.py -mode immersed -tif four_hex_segmented.tif -node four_hex.node -cell four_hex.cell -scale 0.8</code>
+			</div>
+			<p>Shrinks the cells to 80% of their original size, leaving a large fluid gap between them.</p>
+			<img src="four_hex_scale_80.png" width=30%>
+			<p>Note that the <code>-scale</code> option is only available in <code>immersed</code> mode.
+		
+			<h3>Potts</h3>
+			<p>Using the same <code>four_hex_segmented.tif</code> used above, we can also create Chaste files for a Potts model simulation:</p>
+			<div class="codebox">
+				<code>python tif2chaste.py -mode potts -tif four_hex_segmented.tif -node four_hex.node -cell four_hex.cell</code>
+			</div>
+			<p>yielding the fully populated Potts lattice (but still culling cells according to the <code>-margin</code> option):</p>
+			<img src="four_hex_potts.png" width=30%>
+			<h3>Overlapping spheres</h3>
+			<p>Or we can produce Chaste files for an overlapping spheres simulation:</p>
+			<div class="codebox">
+				<code>python tif2chaste.py -mode spheres -tif four_hex_segmented.tif -node four_hex.node</code>
+			</div>
+			<p>which yields only a node file, corresponding to the centroids of each (unculled) cell.</p>
+			<img src="four_hex_spheres.png" width=30%>
+		
+			<h3>A real input file</h3>
+			<p>The above example has dealt only with a small, test image. The following shows an increased contrast version of a <a href="big_example.tif">real segmented image from experimental data</a>:<p>
+			<img src="big_example.png" width=50%>
+			<p>If we then apply our above commands to this data, we can likewise produce Chaste input files for an Immersed Boundary simulation:</p>
+			<img src="big_example_immersed.png" width=50%>
+			<p>A Potts simulation:</p>
+			<img src="big_example_potts.png" width=50%>
+			<p>An overlapping spheres simulation:</p>
+			<img src="big_example_spheres.png" width=50%>
+			<p>And a vertex based simulation:</p>
+			<img src="big_example_vertex.png" width=50%>
+		</div>
+	</body>
+</html>

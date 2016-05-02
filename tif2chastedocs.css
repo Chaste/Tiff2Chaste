@@ -1,0 +1,23 @@
+body {
+	background-color: lightblue;
+}
+
+div.content {
+	background-color: white;
+	margin-left:25%;
+	margin-right:25%;
+	padding-left:5%;
+	padding-right:5%;
+}
+
+img {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+div.codebox {
+	background-color: lightyellow;
+	padding:1%;
+	border-style: dotted;
+}
